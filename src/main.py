@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.ProductService import router as product_router
+from src.product_service import router as product_router
 from src.core.config import Config
 from src.core.database.connection import DBConnection
 

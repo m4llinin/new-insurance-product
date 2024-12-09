@@ -9,7 +9,7 @@ from alembic import context
 
 from src.core.config import Config
 from src.core.database.base import Base
-from src.ProductService.models import Product, MetaField, Lob
+from src.product_service.models import Product, MetaField, Lob
 
 config = context.config
 cnf = Config()
