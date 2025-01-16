@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 
-from src.product_service.schemes.metafield import MetaFieldScheme, MetaFieldSchemeRequest
+from src.product_service.schemes.metafield import (
+    MetaFieldScheme,
+    MetaFieldSchemeRequest,
+)
 
 
 class ProductScheme(BaseModel):

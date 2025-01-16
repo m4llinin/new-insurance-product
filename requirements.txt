@@ -1,4 +1,7 @@
 pydantic~=2.9.2
-fastapi~=0.115.2
 SQLAlchemy~=2.0.35
+fastapi~=0.115.2
+faststream~=0.5.33
+PyJWT~=2.10.1
+bcrypt~=4.2.1
 alembic~=1.13.3

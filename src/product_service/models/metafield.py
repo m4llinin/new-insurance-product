@@ -6,10 +6,8 @@ from src.core.database.base import Base
 from src.product_service.schemes.metafield import MetaFieldScheme
 
 
-class MetaField(Base):
-    __tablename__ = 'metafields'
-
-    _scheme = MetaFieldScheme
+class MetaField(Base, scheme=MetaFieldScheme):
+    __tablename__ = "metafields"
 
     id: Mapped[int_pk]
     name: Mapped[str_not_null]

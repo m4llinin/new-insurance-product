@@ -6,8 +6,8 @@ from src.product_service.repositories.lob import LobRepository
 
 
 class ProductUOW(UnitOfWork):
-    async def __aenter__(self):
-        self.session = self.async_sessionmaker()
+    async def __aenter__(self) -> None:
+        await super().__aenter__()
 
         self.products = ProductRepository(self.session)
         self.meta_fields = MetaFieldRepository(self.session)

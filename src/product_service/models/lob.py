@@ -5,10 +5,8 @@ from src.core.database.base import Base
 from src.product_service.schemes.lob import LobScheme
 
 
-class Lob(Base):
-    __tablename__ = 'lobs'
-
-    _scheme = LobScheme
+class Lob(Base, scheme=LobScheme):
+    __tablename__ = "lobs"
 
     id: Mapped[int_pk]
     name: Mapped[str_not_null]
