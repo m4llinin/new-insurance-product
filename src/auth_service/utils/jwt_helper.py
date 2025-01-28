@@ -1,7 +1,17 @@
-from datetime import datetime, UTC, timedelta
+from datetime import (
+    datetime,
+    UTC,
+    timedelta,
+)
 
-from jwt import PyJWT, PyJWTError
-from typing import Literal, Any
+from jwt import (
+    PyJWT,
+    PyJWTError,
+)
+from typing import (
+    Literal,
+    Any,
+)
 
 from src.core.config import Config
 
@@ -22,21 +32,27 @@ class JWTHelper:
         return self.__jwt.decode(
             jwt=token,
             key=self._config.auth.SECRET_KEY,
-            algorithms=[self._config.auth.ALGORITHM],
+            algorithms=[
+                self._config.auth.ALGORITHM,
+            ],
         )
 
     def create_token(
-        self, token_type: Literal["access", "refresh"], payload: dict[str, Any]
+        self,
+        token_type: Literal["access", "refresh"],
+        payload: dict[str, Any],
     ) -> str:
         to_encode = payload.copy()
         now = datetime.now(tz=UTC)
 
         if token_type == "access":
             expires = now + timedelta(
-                minutes=self._config.auth.ACCESS_TOKEN_EXPIRE_MINUTES
+                minutes=self._config.auth.ACCESS_TOKEN_EXPIRE_MINUTES,
             )
         else:
-            expires = now + timedelta(days=self._config.auth.REFRESH_TOKEN_EXPIRE_DAYS)
+            expires = now + timedelta(
+                days=self._config.auth.REFRESH_TOKEN_EXPIRE_DAYS,
+            )
 
         to_encode.update(
             {
@@ -49,7 +65,9 @@ class JWTHelper:
         return self.encode_jwt(to_encode)
 
     def decode_and_check_token(
-        self, type_token: Literal["access", "refresh"], token: str
+        self,
+        type_token: Literal["access", "refresh"],
+        token: str,
     ) -> Any:
         try:
             decoded_token = self.decode_jwt(token)
@@ -63,8 +81,16 @@ class JWTHelper:
         return decoded_token
 
     def create_pair_tokens(self, user_payload: dict[str, Any]) -> dict[str, str]:
-        access_token = self.create_token(token_type="access", payload=user_payload)
+        access_token = self.create_token(
+            token_type="access",
+            payload=user_payload,
+        )
+        refresh_token = self.create_token(
+            token_type="refresh",
+            payload=user_payload,
+        )
 
-        refresh_token = self.create_token(token_type="refresh", payload=user_payload)
-
-        return {"access_token": access_token, "refresh_token": refresh_token}
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }

@@ -32,3 +32,30 @@ class MetaFieldService:
                 return meta_id
 
             return meta.id
+
+    async def get_metafield_rates(self, meta_fields: list[dict[str, Any]]) -> list:
+        output_rates = []
+        async with self._uow:
+            for meta_field in meta_fields:
+                meta_field_id = meta_field.get("id")
+                meta_field_value = meta_field.get("value")
+
+                meta_field_db = await self._uow.meta_fields.get_one(
+                    {
+                        "id": meta_field_id,
+                    }
+                )
+
+                if meta_field_db is None:
+                    raise ValueError(f"Metafield {meta_field_id} not found")
+
+                if len(meta_field_db.possible_values) != 0:
+                    possible_values = meta_field_db.possible_values
+                    coefficients = meta_field_db.coefficients
+
+                    index_coefficient = possible_values.index(meta_field_value)
+                    output_rates.append(coefficients[index_coefficient])
+                else:
+                    output_rates.append(meta_field_db.constant_coefficient)
+
+        return output_rates

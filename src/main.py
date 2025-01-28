@@ -1,13 +1,24 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import (
+    FastAPI,
+    APIRouter,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.product_service import router as product_router
+from src.core.config import Config
+from src.core.database.connection import DBConnection
+from src.product_service import (
+    router as product_router,
+    rmq_router as rmq_product_router,
+)
 from src.auth_service import (
     router as auth_router,
     rmq_router as rmq_auth_router,
 )
-from src.core.config import Config
-from src.core.database.connection import DBConnection
+from src.contract_service import router as contract_router
+from src.agent_service import (
+    router as agent_router,
+    rmq_router as rmq_agent_router,
+)
 
 
 class App:
@@ -42,7 +53,11 @@ class App:
 
 app = App(
     product_router,
+    rmq_product_router,
     auth_router,
     rmq_auth_router,
+    contract_router,
+    agent_router,
+    rmq_agent_router,
     config=Config(),
 ).setup_app()

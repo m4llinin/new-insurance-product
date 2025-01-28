@@ -1,8 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    status,
+)
 
 from src.auth_service.services.auth import AuthService
 from src.auth_service.api.dependencies import AuthUOWDep
-from src.auth_service.schemas.auth import (
+from src.auth_service.schemes.auth import (
     AuthSchemeResponse,
     AuthSchemeIdResponse,
     AuthSchemeRequest,

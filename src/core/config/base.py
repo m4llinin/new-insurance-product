@@ -1,6 +1,9 @@
 from typing import Any
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+)
 
 
 class BaseConfig(BaseSettings):

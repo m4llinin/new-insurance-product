@@ -1,4 +1,7 @@
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 from typing import Any
 
 from src.core.database.connection import DBConnection
@@ -14,7 +17,7 @@ class UnitOfWorkABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def __aexit__(self, *args: list[Any]) -> None:
+    async def __aexit__(self, *args: Any) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -33,7 +36,7 @@ class UnitOfWork(UnitOfWorkABC):
     async def __aenter__(self) -> None:
         self.session = self.async_sessionmaker()
 
-    async def __aexit__(self, *args: list[Any]) -> None:
+    async def __aexit__(self, *args: Any) -> None:
         await self.rollback()
         await self.session.close()
 

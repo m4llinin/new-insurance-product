@@ -1,7 +1,17 @@
-from sqlalchemy import ForeignKey, ARRAY, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    ForeignKey,
+    ARRAY,
+    Integer,
+)
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+)
 
-from src.core.dependencies import int_pk, str_not_null
+from src.core.dependencies import (
+    int_pk,
+    str_not_null,
+)
 from src.core.database.base import Base
 from src.product_service.schemes.product import ProductScheme
 

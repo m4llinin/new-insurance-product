@@ -1,10 +1,24 @@
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 from typing import Any
 
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import (
+    insert,
+    select,
+    update,
+    delete,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped
-from src.core.dependencies import created_at, updated_at
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+)
+from src.core.dependencies import (
+    created_at,
+    updated_at,
+)
 
 
 class Base(DeclarativeBase):
@@ -45,7 +59,11 @@ class RepositoryABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def update(self, filters: dict[str, Any], data: dict[str, Any]) -> Any:
+    async def update(
+        self,
+        filters: dict[str, Any],
+        data: dict[str, Any],
+    ) -> Any:
         raise NotImplementedError
 
     @abstractmethod
@@ -84,7 +102,11 @@ class SqlAlchemyRepository(RepositoryABC):
         res = await self._session.execute(stmt)
         return [r[0].to_scheme() for r in res.all()]
 
-    async def update(self, filters: dict[str, Any], data: dict[str, Any]) -> Any:
+    async def update(
+        self,
+        filters: dict[str, Any],
+        data: dict[str, Any],
+    ) -> Any:
         stmt = (
             update(self.model).values(**data).filter_by(**filters).returning(self.model)
         )

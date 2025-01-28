@@ -1,4 +1,7 @@
-from pydantic import BaseModel, model_validator
+from pydantic import (
+    BaseModel,
+    model_validator,
+)
 
 
 class MetaFieldScheme(BaseModel):

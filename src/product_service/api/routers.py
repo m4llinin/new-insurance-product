@@ -1,4 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    status,
+)
 
 from src.product_service.schemes.lob import LobScheme
 from src.product_service.schemes.metafield import MetaFieldScheme
@@ -12,7 +16,10 @@ from src.product_service.services.lob import LobService
 from src.product_service.services.product import ProductService
 from src.product_service.services.metafield import MetaFieldService
 
-from src.product_service.api.dependencies import ProductUOWDep, AuthDep
+from src.product_service.api.dependencies import (
+    ProductUOWDep,
+    AuthDep,
+)
 
 router = APIRouter(
     prefix="/products",
@@ -28,7 +35,8 @@ async def get_products(uow: ProductUOWDep) -> list[ProductSchemeResponse]:
 
 @router.post("")
 async def add_product(
-    uow: ProductUOWDep, product: ProductSchemeRequest
+    uow: ProductUOWDep,
+    product: ProductSchemeRequest,
 ) -> ProductSchemeAddResponse:
     try:
         return await ProductService(uow).add_product(product)

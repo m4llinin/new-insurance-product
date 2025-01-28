@@ -8,7 +8,8 @@ class DBConnection:
         if DBConnection.__instance is None:
             self.engine = create_async_engine(url)
             self.async_sessionmaker = async_sessionmaker(
-                self.engine, expire_on_commit=False
+                self.engine,
+                expire_on_commit=False,
             )
         else:
             self.create_instance(url)

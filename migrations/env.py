@@ -8,16 +8,33 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from src.core.config import Config
-from src.core.database.base import Base
-from src.product_service.models import Product, MetaField, Lob
-from src.auth_service.models import User
 
+from src.core.database.base import Base
+from src.auth_service.models import User
+from src.contract_service.models import (
+    Contract,
+    ContractRisk,
+    Risk,
+)
+from src.product_service.models import (
+    Product,
+    MetaField,
+    Lob,
+)
+from src.agent_service.models import (
+    Agent,
+    Ikp,
+    Face,
+    AgentAgreements,
+)
+
+cfg = Config()
 config = context.config
-cnf = Config()
-config.set_main_option("sqlalchemy.url", cnf.db.url())
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+config.set_main_option("sqlalchemy.url", cfg.db.url())
 
 target_metadata = Base.metadata
 

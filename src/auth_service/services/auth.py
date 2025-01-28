@@ -1,8 +1,10 @@
+from pydantic import EmailStr
+
 from src.auth_service.utils.uow import AuthUOW
 from src.auth_service.utils.jwt_helper import JWTHelper
 from src.auth_service.utils.pwd_helper import PWDHelper
 
-from src.auth_service.schemas.auth import (
+from src.auth_service.schemes.auth import (
     AuthScheme,
     AuthSchemeRequest,
     AuthSchemeResponse,
@@ -58,7 +60,10 @@ class AuthService:
             await self._uow.commit()
 
         pair_tokens = self._jwt_helper.create_pair_tokens(
-            {"user_id": user.id, "sub": user.email}
+            {
+                "user_id": user.id,
+                "sub": user.email,
+            }
         )
         return AuthSchemeResponse(**pair_tokens)
 
@@ -69,7 +74,9 @@ class AuthService:
             user_id = decoded_token.get("user_id")
             await self._uow.users.update(
                 filters={"id": user_id},
-                data={"is_active": False},
+                data={
+                    "is_active": False,
+                },
             )
             await self._uow.commit()
 
@@ -82,7 +89,11 @@ class AuthService:
 
         async with self._uow:
             user_id = decoded_token.get("user_id")
-            user = await self._uow.users.get_one({"id": user_id})
+            user = await self._uow.users.get_one(
+                {
+                    "id": user_id,
+                }
+            )
 
         if user is None:
             raise ValueError("Invalid token")
@@ -91,18 +102,26 @@ class AuthService:
             raise NotAuthorizedException("User is not authorized")
 
         access_token = self._jwt_helper.create_token(
-            token_type="access", payload={"user_id": user.id, "sub": user.email}
+            token_type="access",
+            payload={
+                "user_id": user.id,
+                "sub": user.email,
+            },
         )
         return AuthSchemeResponse(
             access_token=access_token,
         )
 
-    async def get_current_user(self, token: str) -> AuthScheme:
+    async def get_current_user(self, token: str) -> EmailStr:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 
         async with self._uow:
             user_id = decoded_token.get("user_id")
-            user = await self._uow.users.get_one({"id": user_id})
+            user = await self._uow.users.get_one(
+                {
+                    "id": user_id,
+                }
+            )
 
         if user is None:
             raise ValueError("Invalid token")
@@ -110,7 +129,7 @@ class AuthService:
         if not user.is_active:
             raise NotAuthorizedException("User is not authorized")
 
-        return user
+        return user.email
 
     async def check_user_is_authorized(self, token: str) -> bool:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)

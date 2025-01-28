@@ -1,8 +1,9 @@
 from faststream.rabbit.fastapi import RabbitRouter
+from pydantic import EmailStr
 
 from src.core.config import Config
 
-from src.auth_service.schemas.auth import AuthScheme
+from src.auth_service.schemes.auth import AuthScheme
 from src.auth_service.services.auth import AuthService
 from src.auth_service.api.dependencies import AuthUOWDep
 
@@ -23,5 +24,5 @@ async def check_auth(uow: AuthUOWDep, token: str) -> bool:
 
 
 @router.subscriber("auth-get-user")
-async def get_user(uow: AuthUOWDep, token: str) -> AuthScheme:
+async def get_user(uow: AuthUOWDep, token: str) -> EmailStr:
     return await AuthService(uow).get_current_user(token)
