@@ -1,28 +1,24 @@
+from typing import Any
 from pydantic import EmailStr
 
 from src.auth_service.utils.uow import AuthUOW
 from src.auth_service.utils.jwt_helper import JWTHelper
 from src.auth_service.utils.pwd_helper import PWDHelper
 
-from src.auth_service.schemes.auth import (
-    AuthScheme,
-    AuthSchemeRequest,
-    AuthSchemeResponse,
-    AuthSchemeIdResponse,
-)
+from src.auth_service.schemes.auth import AuthSchemeRequest
 from src.auth_service.exceptions import NotAuthorizedException
+from src.core.cache.helper import CacheHelper
+from src.core.utils.base_service import BaseService
 
 
-class AuthService:
+class AuthService(BaseService):
 
     def __init__(self, uow: AuthUOW):
         self._uow = uow
         self._pwd_helper = PWDHelper()
         self._jwt_helper = JWTHelper()
 
-    async def register_user(
-        self, credentials: AuthSchemeRequest
-    ) -> AuthSchemeIdResponse:
+    async def register_user(self, credentials: AuthSchemeRequest) -> dict[str, Any]:
         async with self._uow:
             if (
                 await self._uow.users.get_one({"email": credentials.email})
@@ -35,11 +31,11 @@ class AuthService:
             )
             await self._uow.commit()
 
-        return AuthSchemeIdResponse(
-            id=user_id,
-        )
+        return {
+            "id": user_id,
+        }
 
-    async def login_user(self, credentials: AuthSchemeRequest) -> AuthSchemeResponse:
+    async def login_user(self, credentials: AuthSchemeRequest) -> dict[str, str]:
         async with self._uow:
             if (
                 user := await self._uow.users.get_one({"email": credentials.email})
@@ -65,9 +61,9 @@ class AuthService:
                 "sub": user.email,
             }
         )
-        return AuthSchemeResponse(**pair_tokens)
+        return pair_tokens
 
-    async def logout_user(self, token: str) -> AuthSchemeIdResponse:
+    async def logout_user(self, token: str) -> dict[str, Any]:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 
         async with self._uow:
@@ -80,11 +76,11 @@ class AuthService:
             )
             await self._uow.commit()
 
-        return AuthSchemeIdResponse(
-            id=user_id,
-        )
+        return {
+            "id": user_id,
+        }
 
-    async def refresh_token(self, token: str) -> AuthSchemeResponse:
+    async def refresh_token(self, token: str) -> dict[str, Any]:
         decoded_token = self._jwt_helper.decode_and_check_token("refresh", token)
 
         async with self._uow:
@@ -108,10 +104,11 @@ class AuthService:
                 "sub": user.email,
             },
         )
-        return AuthSchemeResponse(
-            access_token=access_token,
-        )
+        return {
+            "access_token": access_token,
+        }
 
+    @CacheHelper.cache()
     async def get_current_user(self, token: str) -> EmailStr:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 
@@ -131,6 +128,7 @@ class AuthService:
 
         return user.email
 
+    @CacheHelper.cache()
     async def check_user_is_authorized(self, token: str) -> bool:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 

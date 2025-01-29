@@ -15,11 +15,11 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("", response_model=AgentResponse)
 async def get_agent(
     uow: AgentUOWDep,
     email: CurrentUserDep,
-) -> AgentResponse:
+):
     return await AgentService(uow).get_profile(
         email=email,
     )

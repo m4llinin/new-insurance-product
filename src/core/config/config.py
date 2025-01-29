@@ -14,7 +14,11 @@ class DBConfig(BaseConfig):
     DB_DATABASE: str
 
     def url(self) -> str:
-        return f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
+        return (
+            f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}"
+            f"/{self.DB_DATABASE}"
+        )
 
 
 class RedisConfig(BaseConfig):
@@ -47,7 +51,10 @@ class RMQConfig(BaseConfig):
     RMQ_PORT: int
 
     def url(self) -> str:
-        return f"postgresql+asyncpg://{self.RMQ_USERNAME}:{self.RMQ_PASSWORD}@{self.RMQ_HOST}:{self.RMQ_PORT}"
+        return (
+            f"postgresql+asyncpg://{self.RMQ_USERNAME}:{self.RMQ_PASSWORD}"
+            f"@{self.RMQ_HOST}:{self.RMQ_PORT}"
+        )
 
 
 class Config:
@@ -56,6 +63,6 @@ class Config:
     def __init__(self) -> None:
         self.db = DBConfig()
         self.auth = AuthConfig()
-        self.rds = RedisConfig()
+        self.redis = RedisConfig()
         self.api = ApiConfig()
         self.rmq = RMQConfig()

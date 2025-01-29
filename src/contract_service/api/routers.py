@@ -29,37 +29,37 @@ router = APIRouter(
 )
 
 
-@router.get("")
+@router.get("", response_model=list[ContractScheme])
 async def get_contracts(
     uow: ContractUOWDep,
     filters: Annotated[ContractFiltersScheme, Query()],
-) -> list[ContractScheme]:
+):
     return await ContractService(uow).get_contracts(filters)
 
 
-@router.post("")
+@router.post("", response_model=ContractIdResponse)
 async def add_contract(
     uow: ContractUOWDep,
     contract: ContractAddScheme,
-) -> ContractIdResponse:
+):
     contract_id = await ContractService(uow).add_contract(contract)
     return ContractIdResponse(
         id=contract_id,
     )
 
 
-@router.get("/risks")
-async def get_risks(uow: ContractUOWDep) -> list[RiskScheme]:
+@router.get("/risks", response_model=list[RiskScheme])
+async def get_risks(uow: ContractUOWDep):
     return await RiskService(uow).get_risks()
 
 
-@router.get("/statistics")
+@router.get("/statistics", response_model=ContractStatisticsSchemeResponse)
 async def get_statistics(
     uow: ContractUOWDep,
     agent_id: CurrentUserIdDep,
     period: Annotated[PeriodScheme, Query()],
     broker: BrokerDep,
-) -> ContractStatisticsSchemeResponse:
+):
     return await ContractService(uow).get_statistics(
         agent_id=agent_id,
         period=period,
@@ -67,24 +67,24 @@ async def get_statistics(
     )
 
 
-@router.post("/price")
+@router.post("/price", response_model=CalculatePriceResponse)
 async def calculate_police_price(
     uow: ContractUOWDep,
     broker: BrokerDep,
     contract: CalculatePriceScheme,
-) -> CalculatePriceResponse:
+):
     return await ContractService(uow).calculate_policy_price(
         contract=contract,
         broker=broker,
     )
 
 
-@router.post("/premium")
+@router.post("/premium", response_model=CalculatePriceResponse)
 async def calculate_police_premium(
     agent_rate: CurrentUserRateDep,
     contract: CalculatePriceResponse,
-) -> CalculatePriceResponse:
-    return ContractService.calculate_agent_premium(
+):
+    return await ContractService().calculate_agent_premium(
         agent_rate=agent_rate,
         contract_price=contract.price,
     )

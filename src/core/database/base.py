@@ -80,16 +80,16 @@ class SqlAlchemyRepository(RepositoryABC):
         if model is None:
             raise ValueError(f"'{cls.__name__}' object has no parameter 'scheme'")
 
-        cls.model = model
+        cls._model = model
         super().__init_subclass__(**kwargs)
 
     async def insert(self, data: dict[str, Any]) -> int:
-        stmt = insert(self.model).values(**data).returning(self.model.id)
+        stmt = insert(self._model).values(**data).returning(self._model.id)
         res = await self._session.execute(stmt)
         return res.scalar_one()
 
     async def get_one(self, filters: dict[str, Any]) -> Any | None:
-        stmt = select(self.model).filter_by(**filters)
+        stmt = select(self._model).filter_by(**filters)
         res = await self._session.execute(stmt)
         res = res.scalar_one_or_none()
 
@@ -98,7 +98,7 @@ class SqlAlchemyRepository(RepositoryABC):
         return None
 
     async def get_all(self, filters: dict[str, Any]) -> list[Any]:
-        stmt = select(self.model).filter_by(**filters)
+        stmt = select(self._model).filter_by(**filters)
         res = await self._session.execute(stmt)
         return [r[0].to_scheme() for r in res.all()]
 
@@ -108,12 +108,15 @@ class SqlAlchemyRepository(RepositoryABC):
         data: dict[str, Any],
     ) -> Any:
         stmt = (
-            update(self.model).values(**data).filter_by(**filters).returning(self.model)
+            update(self._model)
+            .values(**data)
+            .filter_by(**filters)
+            .returning(self._model)
         )
         res = await self._session.execute(stmt)
         return res.scalar_one().to_scheme()
 
     async def delete(self, filters: dict[str, Any]) -> Any:
-        stmt = delete(self.model).filter_by(**filters).returning(self.model)
+        stmt = delete(self._model).filter_by(**filters).returning(self._model)
         res = await self._session.execute(stmt)
         return res.scalar_one().to_scheme()

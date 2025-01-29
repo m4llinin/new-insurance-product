@@ -5,22 +5,21 @@ from src.contract_service.utils.uow import ContractUOW
 from src.contract_service.schemes.contract import (
     ContractAddScheme,
     ContractFiltersScheme,
-    ContractScheme,
-    ContractStatisticsSchemeResponse,
     PeriodScheme,
     ProductStatisticsScheme,
     ProductCommissionPremium,
     OneContractSchemeResponse,
     ProductScheme,
     CalculatePriceScheme,
-    CalculatePriceResponse,
 )
 from src.contract_service.services.contract_risks import ContractRiskService
 from src.contract_service.services.risk import RiskService
+from src.core.utils.base_service import BaseService
+from src.core.cache.helper import CacheHelper
 
 
-class ContractService:
-    def __init__(self, uow: ContractUOW) -> None:
+class ContractService(BaseService):
+    def __init__(self, uow: ContractUOW = None) -> None:
         self._uow = uow
 
     @staticmethod
@@ -46,13 +45,20 @@ class ContractService:
         )
         return await response.decode()
 
+    @CacheHelper.cache()
     async def get_contracts(
         self, filters: ContractFiltersScheme
-    ) -> list[ContractScheme]:
+    ) -> list[dict[str, Any]]:
         filters_dict = filters.model_dump(exclude_none=True)
         async with self._uow:
             contracts = await self._uow.contracts.get_all(filters_dict)
-            return contracts
+
+        output = []
+        for contract in contracts:
+            contract_dict = contract.model_dump()
+            contract_dict.update({"status": contract_dict.get("status").value})
+            output.append(contract_dict)
+        return output
 
     async def add_contract(self, contract: ContractAddScheme) -> int:
         contract_dict = contract.model_dump()
@@ -73,12 +79,13 @@ class ContractService:
 
         return contract_id
 
+    @CacheHelper.cache()
     async def get_statistics(
         self,
         agent_id: int,
         period: PeriodScheme,
         broker: RabbitBroker,
-    ) -> ContractStatisticsSchemeResponse:
+    ) -> dict[str, Any]:
         period_dict = period.model_dump()
         period_dict.update(
             {
@@ -115,33 +122,32 @@ class ContractService:
             product_stats = products_statistics.get(str(product.id))
             product.all_premium = product_stats.premium
             product.all_commission = product_stats.commission
-            products_statistics[str(product.id)] = product
+            products_statistics[str(product.id)] = product.model_dump()
 
         output_contracts = []
         for contract in contracts:
-            product_dict = products_statistics.get(
-                str(contract.product_id)
-            ).model_dump()
+            product_dict = products_statistics.get(str(contract.product_id))
             contract_dict = contract.model_dump()
             output_contracts.append(
                 OneContractSchemeResponse(
-                    product=ProductScheme(**product_dict),
+                    product=product_dict,
                     **contract_dict,
-                )
+                ).model_dump()
             )
 
-        return ContractStatisticsSchemeResponse(
-            contracts=output_contracts,
-            all_premium=all_contract_premium,
-            all_commission=all_contract_commission,
-            products=products,
-        )
+        return {
+            "contracts": output_contracts,
+            "all_premium": all_contract_premium,
+            "all_commission": all_contract_commission,
+            "products": [product.model_dump() for product in products],
+        }
 
+    @CacheHelper.cache()
     async def calculate_policy_price(
         self,
         contract: CalculatePriceScheme,
         broker: RabbitBroker,
-    ) -> CalculatePriceResponse:
+    ) -> dict[str, Any]:
         product_meta_fields_rates = await self.get_rates_products_and_metafields(
             product={
                 "product_id": contract.product_id,
@@ -163,15 +169,16 @@ class ContractService:
         for rate in meta_field_rates:
             price *= rate
 
-        return CalculatePriceResponse(
-            price=price,
-        )
+        return {
+            "price": price,
+        }
 
-    @staticmethod
-    def calculate_agent_premium(
+    @CacheHelper.cache()
+    async def calculate_agent_premium(
+        self,
         agent_rate: float,
         contract_price: float,
-    ) -> CalculatePriceResponse:
-        return CalculatePriceResponse(
-            price=contract_price * (agent_rate / 100),
-        )
+    ) -> dict[str, Any]:
+        return {
+            "price": contract_price * (agent_rate / 100),
+        }

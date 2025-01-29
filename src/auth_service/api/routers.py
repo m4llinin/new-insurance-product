@@ -20,10 +20,8 @@ router = APIRouter(
 )
 
 
-@router.post("/register")
-async def register(
-    uow: AuthUOWDep, credentials: AuthSchemeRequest
-) -> AuthSchemeIdResponse:
+@router.post("/register", response_model=AuthSchemeIdResponse)
+async def register(uow: AuthUOWDep, credentials: AuthSchemeRequest):
     try:
         user_id = await AuthService(uow).register_user(credentials)
     except ValueError as e:
@@ -32,8 +30,8 @@ async def register(
     return user_id
 
 
-@router.post("/login")
-async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest) -> AuthSchemeResponse:
+@router.post("/login", response_model=AuthSchemeResponse)
+async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest):
     try:
         tokens = await AuthService(uow).login_user(credentials)
     except ValueError as e:
@@ -42,8 +40,8 @@ async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest) -> AuthSchemeRe
     return tokens
 
 
-@router.post("/logout")
-async def logout(uow: AuthUOWDep, token: TokenDep) -> AuthSchemeIdResponse:
+@router.post("/logout", response_model=AuthSchemeIdResponse)
+async def logout(uow: AuthUOWDep, token: TokenDep):
     try:
         user_id = await AuthService(uow).logout_user(token)
     except ValueError as e:
@@ -51,8 +49,8 @@ async def logout(uow: AuthUOWDep, token: TokenDep) -> AuthSchemeIdResponse:
     return user_id
 
 
-@router.post("/refresh")
-async def refresh(uow: AuthUOWDep, token: TokenDep) -> AuthSchemeResponse:
+@router.post("/refresh", response_model=AuthSchemeResponse)
+async def refresh(uow: AuthUOWDep, token: TokenDep):
     try:
         token = await AuthService(uow).refresh_token(token)
     except ValueError as e:

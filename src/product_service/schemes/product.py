@@ -11,7 +11,7 @@ class ProductScheme(BaseModel):
     name: str
     lob_id: int
     basic_rate: float
-    meta_fields: list[int] | None
+    meta_fields: list[int] | list[MetaFieldScheme] | None
 
 
 class ProductSchemeAddResponse(BaseModel):

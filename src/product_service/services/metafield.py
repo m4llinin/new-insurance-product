@@ -1,16 +1,20 @@
 from typing import Any
 
+from src.core.utils.base_service import BaseService
 from src.product_service.utils.uow import ProductUOW
 from src.product_service.schemes.metafield import MetaFieldScheme
+from src.core.cache.helper import CacheHelper
 
 
-class MetaFieldService:
+class MetaFieldService(BaseService):
     def __init__(self, uow: ProductUOW):
         self._uow = uow
 
-    async def get_meta_fields(self) -> list[MetaFieldScheme]:
+    @CacheHelper.cache()
+    async def get_meta_fields(self) -> list[dict[str, Any]]:
         async with self._uow:
-            return await self._uow.meta_fields.get_all({})
+            meta_fields = await self._uow.meta_fields.get_all({})
+            return [meta_field.model_dump() for meta_field in meta_fields]
 
     async def insert_meta_fields(self, meta_fields: list[dict[str, Any]]) -> list[int]:
         result = []
@@ -33,7 +37,8 @@ class MetaFieldService:
 
             return meta.id
 
-    async def get_metafield_rates(self, meta_fields: list[dict[str, Any]]) -> list:
+    @CacheHelper.cache()
+    async def get_metafield_rates(self, meta_fields: list[dict[str, Any]]) -> list[float]:
         output_rates = []
         async with self._uow:
             for meta_field in meta_fields:

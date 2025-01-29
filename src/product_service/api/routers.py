@@ -28,16 +28,16 @@ router = APIRouter(
 )
 
 
-@router.get("")
-async def get_products(uow: ProductUOWDep) -> list[ProductSchemeResponse]:
+@router.get("", response_model=list[ProductSchemeResponse])
+async def get_products(uow: ProductUOWDep):
     return await ProductService(uow).get_products()
 
 
-@router.post("")
+@router.post("", response_model=ProductSchemeAddResponse)
 async def add_product(
     uow: ProductUOWDep,
     product: ProductSchemeRequest,
-) -> ProductSchemeAddResponse:
+):
     try:
         return await ProductService(uow).add_product(product)
     except Exception:
@@ -47,11 +47,11 @@ async def add_product(
         )
 
 
-@router.get("/lobs")
-async def get_lobs(uow: ProductUOWDep) -> list[LobScheme]:
+@router.get("/lobs", response_model=list[LobScheme])
+async def get_lobs(uow: ProductUOWDep):
     return await LobService(uow).get_lobs()
 
 
-@router.get("/meta_fields")
-async def get_meta_fields(uow: ProductUOWDep) -> list[MetaFieldScheme]:
+@router.get("/meta_fields", response_model=list[MetaFieldScheme])
+async def get_meta_fields(uow: ProductUOWDep):
     return await MetaFieldService(uow).get_meta_fields()
