@@ -1,5 +1,6 @@
 from typing import Any
 from faststream.rabbit.fastapi import RabbitBroker
+from loguru import logger
 
 from src.contract_service.utils.uow import ContractUOW
 from src.contract_service.schemes.contract import (
@@ -9,7 +10,6 @@ from src.contract_service.schemes.contract import (
     ProductStatisticsScheme,
     ProductCommissionPremium,
     OneContractSchemeResponse,
-    ProductScheme,
     CalculatePriceScheme,
 )
 from src.contract_service.services.contract_risks import ContractRiskService
@@ -31,7 +31,6 @@ class ContractService(BaseService):
             message=product_ids,
             routing_key="prod-get-products-without-metafields",
         )
-
         return [ProductStatisticsScheme(**r) for r in await response.decode()]
 
     @staticmethod
@@ -52,6 +51,11 @@ class ContractService(BaseService):
         filters_dict = filters.model_dump(exclude_none=True)
         async with self._uow:
             contracts = await self._uow.contracts.get_all(filters_dict)
+        logger.debug(
+            "Got contracts: {contracts} with params: {params}",
+            contracts=contracts,
+            params=filters,
+        )
 
         output = []
         for contract in contracts:
@@ -67,6 +71,11 @@ class ContractService(BaseService):
         async with self._uow:
             contract_id = await self._uow.contracts.insert(contract_dict)
             await self._uow.commit()
+        logger.debug(
+            "Contract: {contract} was insert with id: {id}",
+            contract=contract,
+            id=contract_id,
+        )
 
         await ContractRiskService(self._uow).add_contract_risk(
             {
@@ -98,6 +107,11 @@ class ContractService(BaseService):
         product_ids = set()
         async with self._uow:
             contracts = await self._uow.contracts.get_all(period_dict)
+        logger.debug(
+            "Got contracts: {contracts} with params: {params}",
+            contracts=contracts,
+            params=[agent_id, period],
+        )
 
         products_statistics = {}
         for contract in contracts:
@@ -116,6 +130,11 @@ class ContractService(BaseService):
         products = await self.get_products_without_metafields(
             product_ids=product_ids,
             broker=broker,
+        )
+        logger.debug(
+            "Got products: {products} with params: {params}",
+            products=products,
+            params=product_ids,
         )
 
         for product in products:
@@ -169,6 +188,11 @@ class ContractService(BaseService):
         for rate in meta_field_rates:
             price *= rate
 
+        logger.debug(
+            "Calculate contract price:{price} with params: {contract}",
+            price=price,
+            params=contract,
+        )
         return {
             "price": price,
         }

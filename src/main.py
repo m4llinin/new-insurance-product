@@ -3,10 +3,12 @@ from fastapi import (
     APIRouter,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 
 from src.core.config import Config
 from src.core.database.connection import DBConnection
 from src.core.cache.helper import CacheHelper
+from src.core.log import setup_logging
 from src.product_service import (
     router as product_router,
     rmq_router as rmq_product_router,
@@ -46,6 +48,7 @@ class App:
             self.app.include_router(router)
 
     def setup_app(self) -> FastAPI:
+        setup_logging(self._config.log)
         DBConnection.create_instance(url=self._config.db.url())
         CacheHelper.initialize(url=self._config.redis.url())
         self.setup_cors()

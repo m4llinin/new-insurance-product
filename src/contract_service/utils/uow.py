@@ -1,4 +1,4 @@
-from src.core.uow import UnitOfWork
+from src.core.utils.uow import UnitOfWork
 
 from src.contract_service.repositories.risk import RiskRepository
 from src.contract_service.repositories.contract import ContractRepository

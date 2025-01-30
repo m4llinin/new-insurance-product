@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from src.agent_service.utils.uow import AgentUOW
 from src.core.utils.base_service import BaseService
 from src.core.cache.helper import CacheHelper
@@ -17,6 +19,7 @@ class AgentService(BaseService):
                     "email": email,
                 }
             )
+            logger.debug("Got from database rows: {res}", res=agent)
         return agent
 
     @CacheHelper.cache()
@@ -31,4 +34,5 @@ class AgentService(BaseService):
                     "email": email,
                 }
             )
+            logger.debug("Got from database rows: {res}", res=agent)
         return agent.get(column)

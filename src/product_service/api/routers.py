@@ -3,6 +3,7 @@ from fastapi import (
     HTTPException,
     status,
 )
+from loguru import logger
 
 from src.product_service.schemes.lob import LobScheme
 from src.product_service.schemes.metafield import MetaFieldScheme
@@ -30,6 +31,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[ProductSchemeResponse])
 async def get_products(uow: ProductUOWDep):
+    logger.info("Handling request for GET '/products'")
     return await ProductService(uow).get_products()
 
 
@@ -38,6 +40,9 @@ async def add_product(
     uow: ProductUOWDep,
     product: ProductSchemeRequest,
 ):
+    logger.info(
+        "Handling request for POST '/products' with params: {params}", params=product
+    )
     try:
         return await ProductService(uow).add_product(product)
     except Exception:
@@ -49,9 +54,11 @@ async def add_product(
 
 @router.get("/lobs", response_model=list[LobScheme])
 async def get_lobs(uow: ProductUOWDep):
+    logger.info("Handling request for GET '/products/lobs'")
     return await LobService(uow).get_lobs()
 
 
 @router.get("/meta_fields", response_model=list[MetaFieldScheme])
 async def get_meta_fields(uow: ProductUOWDep):
+    logger.info("Handling request for GET '/products/lobs'")
     return await MetaFieldService(uow).get_meta_fields()

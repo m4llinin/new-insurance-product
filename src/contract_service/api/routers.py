@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Annotated
+from loguru import logger
 
 from src.contract_service.api.dependencies import (
     AuthDep,
@@ -34,6 +35,10 @@ async def get_contracts(
     uow: ContractUOWDep,
     filters: Annotated[ContractFiltersScheme, Query()],
 ):
+    logger.info(
+        "Handling request for GET '/contracts' with params: {params}",
+        params=filters,
+    )
     return await ContractService(uow).get_contracts(filters)
 
 
@@ -42,6 +47,10 @@ async def add_contract(
     uow: ContractUOWDep,
     contract: ContractAddScheme,
 ):
+    logger.info(
+        "Handling request for POST '/contracts' with params: {params}",
+        params=contract,
+    )
     contract_id = await ContractService(uow).add_contract(contract)
     return ContractIdResponse(
         id=contract_id,
@@ -50,6 +59,7 @@ async def add_contract(
 
 @router.get("/risks", response_model=list[RiskScheme])
 async def get_risks(uow: ContractUOWDep):
+    logger.info("Handling request for GET '/contracts/risks'")
     return await RiskService(uow).get_risks()
 
 
@@ -60,6 +70,10 @@ async def get_statistics(
     period: Annotated[PeriodScheme, Query()],
     broker: BrokerDep,
 ):
+    logger.info(
+        "Handling request for GET '/contracts/statistics' with params: {params}",
+        params=[agent_id,period],
+    )
     return await ContractService(uow).get_statistics(
         agent_id=agent_id,
         period=period,
@@ -73,6 +87,10 @@ async def calculate_police_price(
     broker: BrokerDep,
     contract: CalculatePriceScheme,
 ):
+    logger.info(
+        "Handling request for POST '/contracts/price' with params: {params}",
+        params=contract,
+    )
     return await ContractService(uow).calculate_policy_price(
         contract=contract,
         broker=broker,
@@ -84,6 +102,10 @@ async def calculate_police_premium(
     agent_rate: CurrentUserRateDep,
     contract: CalculatePriceResponse,
 ):
+    logger.info(
+        "Handling request for POST '/contracts/premium' with params: {params}",
+        params=contract,
+    )
     return await ContractService().calculate_agent_premium(
         agent_rate=agent_rate,
         contract_price=contract.price,

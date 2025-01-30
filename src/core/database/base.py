@@ -4,6 +4,7 @@ from abc import (
 )
 from typing import Any
 
+from loguru import logger
 from sqlalchemy import (
     insert,
     select,
@@ -84,11 +85,21 @@ class SqlAlchemyRepository(RepositoryABC):
         super().__init_subclass__(**kwargs)
 
     async def insert(self, data: dict[str, Any]) -> int:
+        logger.debug(
+            "Query for database from {model} with params: {params}",
+            model=self._model.__tablename__,
+            params=data,
+        )
         stmt = insert(self._model).values(**data).returning(self._model.id)
         res = await self._session.execute(stmt)
         return res.scalar_one()
 
     async def get_one(self, filters: dict[str, Any]) -> Any | None:
+        logger.debug(
+            "Query for database from {model} with params: {params}",
+            model=self._model.__tablename__,
+            params=filters,
+        )
         stmt = select(self._model).filter_by(**filters)
         res = await self._session.execute(stmt)
         res = res.scalar_one_or_none()
@@ -98,6 +109,11 @@ class SqlAlchemyRepository(RepositoryABC):
         return None
 
     async def get_all(self, filters: dict[str, Any]) -> list[Any]:
+        logger.debug(
+            "Query for database from {model} with params: {params}",
+            model=self._model.__tablename__,
+            params=filters,
+        )
         stmt = select(self._model).filter_by(**filters)
         res = await self._session.execute(stmt)
         return [r[0].to_scheme() for r in res.all()]
@@ -107,6 +123,12 @@ class SqlAlchemyRepository(RepositoryABC):
         filters: dict[str, Any],
         data: dict[str, Any],
     ) -> Any:
+        logger.debug(
+            "Query for database from {model} with filters: {filters} and params: {params}",
+            model=self._model.__tablename__,
+            filters=filters,
+            params=data,
+        )
         stmt = (
             update(self._model)
             .values(**data)
@@ -117,6 +139,11 @@ class SqlAlchemyRepository(RepositoryABC):
         return res.scalar_one().to_scheme()
 
     async def delete(self, filters: dict[str, Any]) -> Any:
+        logger.debug(
+            "Query for database from {model} with params: {params}",
+            model=self._model.__tablename__,
+            params=filters,
+        )
         stmt = delete(self._model).filter_by(**filters).returning(self._model)
         res = await self._session.execute(stmt)
         return res.scalar_one().to_scheme()

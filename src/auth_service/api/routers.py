@@ -3,6 +3,7 @@ from fastapi import (
     HTTPException,
     status,
 )
+from loguru import logger
 
 from src.auth_service.services.auth import AuthService
 from src.auth_service.api.dependencies import AuthUOWDep
@@ -22,6 +23,10 @@ router = APIRouter(
 
 @router.post("/register", response_model=AuthSchemeIdResponse)
 async def register(uow: AuthUOWDep, credentials: AuthSchemeRequest):
+    logger.info(
+        "Handling request for POST '/auth/register' for userId: {email}",
+        email=credentials.email,
+    )
     try:
         user_id = await AuthService(uow).register_user(credentials)
     except ValueError as e:
@@ -32,6 +37,10 @@ async def register(uow: AuthUOWDep, credentials: AuthSchemeRequest):
 
 @router.post("/login", response_model=AuthSchemeResponse)
 async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest):
+    logger.info(
+        "Handling request for POST '/auth/login' for userId: {email}",
+        email=credentials.email,
+    )
     try:
         tokens = await AuthService(uow).login_user(credentials)
     except ValueError as e:
@@ -42,6 +51,7 @@ async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest):
 
 @router.post("/logout", response_model=AuthSchemeIdResponse)
 async def logout(uow: AuthUOWDep, token: TokenDep):
+    logger.info("Handling request for POST '/auth/logout' for userId: {token}", token=token)
     try:
         user_id = await AuthService(uow).logout_user(token)
     except ValueError as e:
@@ -51,6 +61,7 @@ async def logout(uow: AuthUOWDep, token: TokenDep):
 
 @router.post("/refresh", response_model=AuthSchemeResponse)
 async def refresh(uow: AuthUOWDep, token: TokenDep):
+    logger.info("Handling request for POST '/auth/refresh' for userId: {token}", token=token)
     try:
         token = await AuthService(uow).refresh_token(token)
     except ValueError as e:

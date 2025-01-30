@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from src.core.utils.base_service import BaseService
 from src.product_service.schemes.product import (
     ProductSchemeRequest,
@@ -28,7 +30,7 @@ class ProductService(BaseService):
                     meta_fields,
                 )
             )
-
+        logger.debug("Got products from database: {products}", products=products)
         return [product.model_dump() for product in products]
 
     @CacheHelper.cache()
@@ -44,7 +46,7 @@ class ProductService(BaseService):
         product.meta_fields = list(
             filter(lambda meta_field: meta_field.id in product.meta_fields, meta_fields)
         )
-
+        logger.debug("Got product from database: {product}", product=product)
         return product.model_dump()
 
     @CacheHelper.cache()
@@ -65,6 +67,11 @@ class ProductService(BaseService):
                         name=product.name,
                     )
                 )
+        logger.debug(
+            "Got products from database: {products} with ids: {ids}",
+            products=products,
+            ids=product_ids,
+        )
         return [product.model_dump() for product in products]
 
     async def add_product(self, product: ProductSchemeRequest) -> dict[str, Any]:
@@ -74,10 +81,15 @@ class ProductService(BaseService):
         ).insert_meta_fields(product_dict["meta_fields"])
 
         async with self._uow:
-            ins = await self._uow.products.insert(product_dict)
+            product_id = await self._uow.products.insert(product_dict)
             await self._uow.commit()
+        logger.debug(
+            "Product: {product} was insert with id: {id}",
+            product=product,
+            id=product_id,
+        )
         return {
-            "id": ins,
+            "id": product_id,
         }
 
     @CacheHelper.cache()
@@ -95,7 +107,11 @@ class ProductService(BaseService):
                     "id": product.product_id,
                 }
             )
-
+        logger.debug(
+            "Got product rates: {rates} with params: {params}",
+            rates=product_db.basic_rate,
+            params=product.product_id,
+        )
         return {
             "product_rate": product_db.basic_rate,
             "meta_fields": meta_fields,

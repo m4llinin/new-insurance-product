@@ -1,5 +1,7 @@
 import json
 from typing import Callable, ParamSpec, TypeVar, Any
+
+from loguru import logger
 from redis.asyncio import Redis
 from functools import wraps
 
@@ -32,12 +34,16 @@ class CacheHelper:
 
                 key_prefix = prefix or func.__name__
                 key = f"{key_prefix}:{[str(p) for p in args]}:{kwargs}"
-                print(key)
-
                 cached_value = await cls._client.get(key)
 
                 if cached_value is not None:
-                    return json.loads(cached_value)
+                    data = json.loads(cached_value)
+                    logger.info(
+                        "Return value: {data} from cache with params: {params}",
+                        data=data,
+                        params=[args, kwargs],
+                    )
+                    return data
 
                 result = await func(*args, **kwargs)
                 await cls._client.set(

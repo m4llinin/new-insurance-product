@@ -1,4 +1,4 @@
-from src.core.uow import UnitOfWork
+from src.core.utils.uow import UnitOfWork
 
 from src.auth_service.repostories.user import UserRepository
 

@@ -15,7 +15,7 @@ def _get_broker(request: Request) -> RabbitBroker:
     return request.state.broker
 
 
-TokenDep = Annotated[str, Header(alias="Authorization")]
+TokenDep = Annotated[str, Header(alias="WWW-Authorization")]
 BrokerDep = Annotated[RabbitBroker, Depends(_get_broker)]
 
 int_pk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]

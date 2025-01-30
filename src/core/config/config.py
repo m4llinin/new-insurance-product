@@ -57,6 +57,14 @@ class RMQConfig(BaseConfig):
         )
 
 
+class LoggingConfig(BaseConfig):
+    FORMAT: str
+    ROTATION: str
+    COMPRESSION: str
+    BACKTRACE: bool
+    SERIALIZE: bool
+
+
 class Config:
     IS_DEV: bool = True
 
@@ -66,3 +74,4 @@ class Config:
         self.redis = RedisConfig()
         self.api = ApiConfig()
         self.rmq = RMQConfig()
+        self.log = LoggingConfig()

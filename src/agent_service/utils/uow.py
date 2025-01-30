@@ -1,4 +1,4 @@
-from src.core.uow import UnitOfWork
+from src.core.utils.uow import UnitOfWork
 from src.agent_service.repositories.agent_agreements import AgentAgreementsRepository
 from src.agent_service.repositories.agent import AgentRepository
 from src.agent_service.repositories.ikp import IkpRepository

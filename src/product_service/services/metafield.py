@@ -1,8 +1,9 @@
 from typing import Any
 
+from loguru import logger
+
 from src.core.utils.base_service import BaseService
 from src.product_service.utils.uow import ProductUOW
-from src.product_service.schemes.metafield import MetaFieldScheme
 from src.core.cache.helper import CacheHelper
 
 
@@ -14,6 +15,9 @@ class MetaFieldService(BaseService):
     async def get_meta_fields(self) -> list[dict[str, Any]]:
         async with self._uow:
             meta_fields = await self._uow.meta_fields.get_all({})
+            logger.debug(
+                "Got meta_fields from database: {meta_fields}", meta_fields=meta_fields
+            )
             return [meta_field.model_dump() for meta_field in meta_fields]
 
     async def insert_meta_fields(self, meta_fields: list[dict[str, Any]]) -> list[int]:
@@ -32,13 +36,20 @@ class MetaFieldService(BaseService):
 
             if meta is None:
                 meta_id = await self._uow.meta_fields.insert(meta_field)
+                logger.debug(
+                    "Meta_field: {meta_field} was insert with id: {id}",
+                    meta_field=meta_field,
+                    id=meta_id,
+                )
                 await self._uow.commit()
                 return meta_id
 
             return meta.id
 
     @CacheHelper.cache()
-    async def get_metafield_rates(self, meta_fields: list[dict[str, Any]]) -> list[float]:
+    async def get_metafield_rates(
+        self, meta_fields: list[dict[str, Any]]
+    ) -> list[float]:
         output_rates = []
         async with self._uow:
             for meta_field in meta_fields:
@@ -62,5 +73,9 @@ class MetaFieldService(BaseService):
                     output_rates.append(coefficients[index_coefficient])
                 else:
                     output_rates.append(meta_field_db.constant_coefficient)
-
+        logger.debug(
+            "Got meta_field rates: {rates} for meta_fields: {meta_fields}",
+            rates=output_rates,
+            meta_fields=meta_fields,
+        )
         return output_rates

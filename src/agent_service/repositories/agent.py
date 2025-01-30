@@ -1,5 +1,5 @@
 from typing import Any
-
+from loguru import logger
 from sqlalchemy import select
 
 from src.agent_service.models import (
@@ -13,6 +13,11 @@ from src.core.database.base import SqlAlchemyRepository
 
 class AgentRepository(SqlAlchemyRepository, model=Agent):
     async def get_one_with_face(self, filters: dict[str, Any]) -> dict[str, Any]:
+        logger.debug(
+            "Query for database from {model} with params: {params}",
+            model=self._model,
+            params=filters,
+        )
         stmt = (
             select(
                 Agent.id.label("agent_id"),
