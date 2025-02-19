@@ -35,3 +35,9 @@ class RiskService(BaseService):
                 risk_ids=risk_ids,
             )
         return output_rates
+
+    async def add(self, risk: dict[str, Any]) -> int:
+        async with self._uow:
+            risk_id = await self._uow.risks.insert(risk)
+            await self._uow.commit()
+            return risk_id

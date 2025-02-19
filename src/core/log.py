@@ -1,17 +1,33 @@
+import os
+
 from loguru import logger
 from src.core.config.config import LoggingConfig
 import sys
 
 
-def setup_logging(config: LoggingConfig):
+def setup_logging(mode: str, config: LoggingConfig):
     logger.remove()
 
-    logger.add(
-        sys.stdout,
-        level="DEBUG",
-        format=config.FORMAT,
-        backtrace=config.BACKTRACE,
-    )
+    if mode == "TEST":
+        if os.path.exists("logs/test.log"):
+            os.remove("logs/test.log")
+
+        logger.add(
+            "logs/test.log",
+            level="DEBUG",
+            format=config.FORMAT,
+            rotation=config.ROTATION,
+            compression=config.COMPRESSION,
+            backtrace=config.BACKTRACE,
+            serialize=config.SERIALIZE,
+        )
+    else:
+        logger.add(
+            sys.stdout,
+            level="DEBUG",
+            format=config.FORMAT,
+            backtrace=config.BACKTRACE,
+        )
 
     logger.add(
         "logs/info.log",

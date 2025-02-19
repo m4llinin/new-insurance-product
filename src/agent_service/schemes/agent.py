@@ -6,7 +6,7 @@ from enum import Enum
 from src.agent_service.schemes.face import TypeFace
 
 
-class Statuses(Enum):
+class AgentStatuses(Enum):
     project = "project"
     active = "active"
     ended = "ended"
@@ -18,7 +18,7 @@ class AgentScheme(BaseModel):
     email: str
     face_id: int
     ikp_id: int
-    status: Statuses
+    status: AgentStatuses
     date_create: datetime
     date_begin: datetime | None = None
     date_end: datetime | None = None
@@ -33,6 +33,6 @@ class AgentResponse(BaseModel):
     name: str | None = None
     inn: int
     ikp_name: str
-    status: Statuses
+    status: AgentStatuses
     date_begin: datetime | None = None
     date_end: datetime | None = None

@@ -1,12 +1,14 @@
 from typing import Any
+
 from faststream.rabbit.fastapi import RabbitRouter
 from loguru import logger
 from pydantic import EmailStr
 
+from src.core.config import Config
 from src.agent_service.api.dependencies import AgentUOWDep
 from src.agent_service.services.agent import AgentService
 
-router = RabbitRouter()
+router = RabbitRouter(Config().rmq.URL)
 
 
 @router.subscriber("agent-get-agent")

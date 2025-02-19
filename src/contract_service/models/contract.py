@@ -13,7 +13,7 @@ from src.core.dependencies import (
 )
 
 from src.contract_service.schemes.contract import (
-    Statuses,
+    ContractStatuses,
     ContractScheme,
 )
 
@@ -34,7 +34,7 @@ class Contract(Base, scheme=ContractScheme):
     rate: Mapped[float] = mapped_column(default=1.0)
     commission: Mapped[float] = mapped_column(default=0.0)
     status: Mapped[str] = mapped_column(
-        Enum(Statuses), default=Statuses.DRAFT, nullable=False
+        Enum(ContractStatuses), default=ContractStatuses.DRAFT, nullable=False
     )
     policy_holder_id: Mapped[int_not_null]
     insured_personal_id: Mapped[int_not_null]

@@ -103,6 +103,19 @@ class AuthService(BaseService):
 
         async with self._uow:
             user_id = decoded_token.get("user_id")
+
+            user = await self._uow.users.get_one(
+                {
+                    "id": user_id,
+                }
+            )
+
+            if user is None:
+                raise ValueError("User not found")
+
+            if not user.is_active:
+                raise ValueError("User is not active")
+
             await self._uow.users.update(
                 filters={
                     "id": user_id,

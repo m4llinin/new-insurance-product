@@ -1,11 +1,14 @@
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from fastapi import (
     FastAPI,
     APIRouter,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
 
 from src.core.config import Config
+from src.core.rabbit.broker import Broker
 from src.core.database.connection import DBConnection
 from src.core.cache.helper import CacheHelper
 from src.core.log import setup_logging
@@ -25,17 +28,21 @@ from src.agent_service import (
 
 
 class App:
-    def __init__(
-        self,
-        *routers: APIRouter,
-        config: Config,
-    ):
-        self._config = config
-        self.app = FastAPI()
-        self.routers = routers
+    routers: list[APIRouter] = [
+        auth_router,
+        rmq_auth_router,
+        product_router,
+        rmq_product_router,
+        contract_router,
+        agent_router,
+        rmq_agent_router,
+    ]
 
-    def setup_cors(self) -> None:
-        self.app.add_middleware(
+    def __init__(self, config: Config) -> None:
+        self._config = config
+
+    def setup_cors(self, app: FastAPI) -> None:
+        app.add_middleware(
             CORSMiddleware,
             allow_origins=self._config.api.CORS_ORIGINS,
             allow_credentials=self._config.api.CORS_CREDENTIALS,
@@ -43,26 +50,38 @@ class App:
             allow_headers=self._config.api.CORS_HEADERS,
         )
 
-    def include_routers(self) -> None:
+    def include_routers(self, app: FastAPI) -> None:
         for router in self.routers:
-            self.app.include_router(router)
+            app.include_router(router)
 
-    def setup_app(self) -> FastAPI:
-        setup_logging(self._config.log)
-        DBConnection.create_instance(url=self._config.db.url())
-        CacheHelper.initialize(url=self._config.redis.url())
-        self.setup_cors()
-        self.include_routers()
-        return self.app
+    @asynccontextmanager
+    async def lifespan(self, app: FastAPI) -> AsyncGenerator[None, None]:
+        broker = Broker(
+            url=self._config.rmq.URL,
+        )
+        await broker.connect()
+
+        DBConnection(
+            url=self._config.db.URL,
+        )
+        CacheHelper.initialize(
+            url=self._config.redis.URL,
+        )
+
+        yield
+
+        await broker.disconnect()
+        await CacheHelper.close()
+
+    def initialize(self) -> FastAPI:
+        app = FastAPI(lifespan=self.lifespan)
+        setup_logging(
+            mode=self._config.api.MODE,
+            config=self._config.log,
+        )
+        self.setup_cors(app)
+        self.include_routers(app)
+        return app
 
 
-app = App(
-    product_router,
-    rmq_product_router,
-    auth_router,
-    rmq_auth_router,
-    contract_router,
-    agent_router,
-    rmq_agent_router,
-    config=Config(),
-).setup_app()
+app = App(config=Config()).initialize()

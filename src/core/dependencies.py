@@ -1,18 +1,18 @@
 from typing import Annotated
 from datetime import datetime
-
 from fastapi import (
     Header,
-    Request,
     Depends,
 )
 from faststream.rabbit.fastapi import RabbitBroker
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.sql import func
 
+from src.core.rabbit.broker import Broker
 
-def _get_broker(request: Request) -> RabbitBroker:
-    return request.state.broker
+
+def _get_broker() -> RabbitBroker:
+    return Broker().broker
 
 
 TokenDep = Annotated[str, Header(alias="WWW-Authorization")]

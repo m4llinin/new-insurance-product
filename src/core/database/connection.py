@@ -1,28 +1,24 @@
+from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from src.core.utils.singleton import singleton
 
+
+@singleton
 class DBConnection:
-    __instance = None
+    def __init__(self, url: str = None) -> None:
+        if url is None:
+            raise ValueError("URL cannot be None")
 
-    def __init__(self, url: str) -> None:
-        if DBConnection.__instance is None:
-            self.engine = create_async_engine(url)
-            self.async_sessionmaker = async_sessionmaker(
-                self.engine,
-                expire_on_commit=False,
-            )
-        else:
-            self.create_instance(url)
+        self._engine = create_async_engine(
+            url,
+            poolclass=NullPool,
+        )
+        self._async_sessionmaker = async_sessionmaker(
+            self._engine,
+            expire_on_commit=False,
+        )
 
-    @classmethod
-    def create_instance(cls, url: str) -> "DBConnection":
-        if cls.__instance is None:
-            cls.__instance = DBConnection(url)
-            return cls.__instance
-        raise TypeError(f"{cls.__name__} is created.")
-
-    @classmethod
-    def get_instance(cls) -> "DBConnection":
-        if cls.__instance is None:
-            raise TypeError(f"{cls.__name__} is not yet created.")
-        return cls.__instance
+    @property
+    def async_sessionmaker(self):
+        return self._async_sessionmaker

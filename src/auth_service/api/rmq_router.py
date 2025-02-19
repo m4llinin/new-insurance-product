@@ -8,7 +8,7 @@ from src.auth_service.services.auth import AuthService
 from src.auth_service.api.dependencies import AuthUOWDep
 
 
-router = RabbitRouter(Config().rmq.url())
+router = RabbitRouter(Config().rmq.URL)
 
 
 @router.subscriber("auth-check")

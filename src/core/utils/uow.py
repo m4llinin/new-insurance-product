@@ -5,6 +5,7 @@ from abc import (
 from typing import Any
 
 from src.core.database.connection import DBConnection
+from src.core.config import Config
 
 
 class UnitOfWorkABC(ABC):
@@ -31,7 +32,7 @@ class UnitOfWorkABC(ABC):
 
 class UnitOfWork(UnitOfWorkABC):
     def __init__(self) -> None:
-        self.async_sessionmaker = DBConnection.get_instance().async_sessionmaker
+        self.async_sessionmaker = DBConnection(Config().db.URL).async_sessionmaker
 
     async def __aenter__(self) -> None:
         self.session = self.async_sessionmaker()

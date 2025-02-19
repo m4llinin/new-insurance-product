@@ -12,15 +12,14 @@ class TypeFace(Enum):
     legal = "legal"
 
 
-
 class FaceScheme(BaseModel):
     id: int
     type: TypeFace
-    first_name: str | None = None
-    second_name: str | None = None
-    last_name: str | None = None
-    date_of_birth: datetime | None = None
-    name: str | None
+    first_name: str
+    second_name: str
+    last_name: str
+    date_of_birth: datetime
+    name: str | None = None
     inn: int
 
     @model_validator(mode="after")
@@ -28,10 +27,10 @@ class FaceScheme(BaseModel):
         if (
             self.type == TypeFace.legal
             and (
-                (self.first_name is None)
-                + (self.second_name is None)
-                + (self.last_name is None)
-                + (self.date_of_birth is None)
+                (self.first_name is not None)
+                + (self.second_name is not None)
+                + (self.last_name is not None)
+                + (self.date_of_birth is not None)
                 + (self.name is not None)
             )
             != 5

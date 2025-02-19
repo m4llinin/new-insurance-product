@@ -12,7 +12,7 @@ from sqlalchemy.orm import (
 from src.core.database.base import Base
 from src.agent_service.schemes.agent import (
     AgentScheme,
-    Statuses,
+    AgentStatuses,
 )
 from src.core.dependencies import int_pk
 
@@ -24,7 +24,7 @@ class Agent(Base, scheme=AgentScheme):
     email: Mapped[str] = mapped_column(nullable=False)
     face_id: Mapped[int] = mapped_column(ForeignKey("faces.id"), nullable=False)
     ikp_id: Mapped[int] = mapped_column(ForeignKey("ikps.id"), nullable=False)
-    status: Mapped[str] = mapped_column(Enum(Statuses), default=Statuses.project)
+    status: Mapped[str] = mapped_column(Enum(AgentStatuses), default=AgentStatuses.project)
     date_create: Mapped[datetime] = mapped_column(nullable=False)
     date_begin: Mapped[datetime] = mapped_column(nullable=True)
     date_end: Mapped[datetime] = mapped_column(nullable=True)

@@ -13,7 +13,8 @@ class DBConfig(BaseConfig):
     DB_PORT: int
     DB_DATABASE: str
 
-    def url(self) -> str:
+    @property
+    def URL(self) -> str:
         return (
             f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}"
@@ -26,7 +27,8 @@ class RedisConfig(BaseConfig):
     REDIS_PORT: int
     REDIS_DATABASE: str
 
-    def url(self) -> str:
+    @property
+    def URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DATABASE}"
 
 
@@ -43,6 +45,8 @@ class ApiConfig(BaseConfig):
     CORS_METHODS: list_str
     CORS_HEADERS: list_str
 
+    MODE: str
+
 
 class RMQConfig(BaseConfig):
     RMQ_USERNAME: str
@@ -50,9 +54,10 @@ class RMQConfig(BaseConfig):
     RMQ_HOST: str
     RMQ_PORT: int
 
-    def url(self) -> str:
+    @property
+    def URL(self) -> str:
         return (
-            f"postgresql+asyncpg://{self.RMQ_USERNAME}:{self.RMQ_PASSWORD}"
+            f"amqp://{self.RMQ_USERNAME}:{self.RMQ_PASSWORD}"
             f"@{self.RMQ_HOST}:{self.RMQ_PORT}"
         )
 
@@ -66,8 +71,6 @@ class LoggingConfig(BaseConfig):
 
 
 class Config:
-    IS_DEV: bool = True
-
     def __init__(self) -> None:
         self.db = DBConfig()
         self.auth = AuthConfig()

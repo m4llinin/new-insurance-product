@@ -21,7 +21,11 @@ router = APIRouter(
 )
 
 
-@router.post("/register", response_model=AuthSchemeIdResponse)
+@router.post(
+    "/register",
+    response_model=AuthSchemeIdResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def register(uow: AuthUOWDep, credentials: AuthSchemeRequest):
     logger.info(
         "Handling request for POST '/auth/register' for userId: {email}",
@@ -51,7 +55,9 @@ async def login(uow: AuthUOWDep, credentials: AuthSchemeRequest):
 
 @router.post("/logout", response_model=AuthSchemeIdResponse)
 async def logout(uow: AuthUOWDep, token: TokenDep):
-    logger.info("Handling request for POST '/auth/logout' for userId: {token}", token=token)
+    logger.info(
+        "Handling request for POST '/auth/logout' for userId: {token}", token=token
+    )
     try:
         user_id = await AuthService(uow).logout_user(token)
     except ValueError as e:
@@ -61,7 +67,9 @@ async def logout(uow: AuthUOWDep, token: TokenDep):
 
 @router.post("/refresh", response_model=AuthSchemeResponse)
 async def refresh(uow: AuthUOWDep, token: TokenDep):
-    logger.info("Handling request for POST '/auth/refresh' for userId: {token}", token=token)
+    logger.info(
+        "Handling request for POST '/auth/refresh' for userId: {token}", token=token
+    )
     try:
         token = await AuthService(uow).refresh_token(token)
     except ValueError as e:

@@ -11,7 +11,7 @@ from src.product_service.schemes.product import (
 )
 from src.product_service.services.product import ProductService
 
-router = RabbitRouter(Config().rmq.url())
+router = RabbitRouter(Config().rmq.URL)
 
 
 @router.subscriber(
