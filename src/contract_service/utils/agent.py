@@ -1,17 +1,19 @@
-from faststream.rabbit import RabbitBroker
 from pydantic import EmailStr
 
+from src.core.cache.helper import CacheHelper
+from src.core.rabbit.broker import BrokerRabbit
 
+
+@CacheHelper.cache()
 async def get_agent(
     email: EmailStr,
     column: str,
-    broker: RabbitBroker,
+    broker: BrokerRabbit,
 ) -> int:
-    response = await broker.request(
+    return await broker.request(
         message={
             "email": email,
             "column": column,
         },
         routing_key="agent-get-agent",
     )
-    return await response.decode()

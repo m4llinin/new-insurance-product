@@ -1,5 +1,4 @@
 from typing import Any
-from faststream.rabbit.fastapi import RabbitBroker
 from loguru import logger
 
 from src.contract_service.utils.uow import ContractUOW
@@ -14,6 +13,7 @@ from src.contract_service.schemes.contract import (
 )
 from src.contract_service.services.contract_risks import ContractRiskService
 from src.contract_service.services.risk import RiskService
+from src.core.rabbit.broker import BrokerRabbit
 from src.core.utils.base_service import BaseService
 from src.core.cache.helper import CacheHelper
 
@@ -25,24 +25,26 @@ class ContractService(BaseService):
     @staticmethod
     async def get_products_without_metafields(
         product_ids: list[int],
-        broker: RabbitBroker,
+        broker: BrokerRabbit,
     ) -> list[ProductStatisticsScheme]:
         response = await broker.request(
-            message=product_ids,
+            message={
+                "product_ids": product_ids,
+            },
             routing_key="prod-get-products-without-metafields",
         )
-        return [ProductStatisticsScheme(**r) for r in await response.decode()]
+        return [ProductStatisticsScheme(**r) for r in response]
 
     @staticmethod
     async def get_rates_products_and_metafields(
         product: dict[str, Any],
-        broker: RabbitBroker,
+        broker: BrokerRabbit,
     ) -> dict[str, Any]:
         response = await broker.request(
             message=product,
             routing_key="prod-get-rates-products-and-metafields",
         )
-        return await response.decode()
+        return response
 
     @CacheHelper.cache()
     async def get_contracts(
@@ -56,13 +58,7 @@ class ContractService(BaseService):
             contracts=contracts,
             params=filters,
         )
-
-        output = []
-        for contract in contracts:
-            contract_dict = contract.model_dump()
-            contract_dict.update({"status": contract_dict.get("status").value})
-            output.append(contract_dict)
-        return output
+        return [contract.model_dump() for contract in contracts]
 
     async def add_contract(self, contract: ContractAddScheme) -> int:
         contract_dict = contract.model_dump()
@@ -93,7 +89,7 @@ class ContractService(BaseService):
         self,
         agent_id: int,
         period: PeriodScheme,
-        broker: RabbitBroker,
+        broker: BrokerRabbit,
     ) -> dict[str, Any]:
         period_dict = period.model_dump()
         period_dict.update(
@@ -165,12 +161,12 @@ class ContractService(BaseService):
     async def calculate_policy_price(
         self,
         contract: CalculatePriceScheme,
-        broker: RabbitBroker,
+        broker: BrokerRabbit,
     ) -> dict[str, Any]:
         product_meta_fields_rates = await self.get_rates_products_and_metafields(
             product={
                 "product_id": contract.product_id,
-                "meta_fields": contract.meta_fields,
+                "meta_fields": [mt.model_dump() for mt in contract.meta_fields],
             },
             broker=broker,
         )
@@ -191,7 +187,7 @@ class ContractService(BaseService):
         logger.debug(
             "Calculate contract price:{price} with params: {contract}",
             price=price,
-            params=contract,
+            contract=contract,
         )
         return {
             "price": price,

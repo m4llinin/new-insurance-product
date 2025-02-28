@@ -79,7 +79,7 @@ class SqlAlchemyRepository(RepositoryABC):
     def __init_subclass__(cls, **kwargs):
         model = kwargs.pop("model")
         if model is None:
-            raise ValueError(f"'{cls.__name__}' object has no parameter 'scheme'")
+            raise AttributeError(f"'{cls.__name__}' object has no parameter 'scheme'")
 
         cls._model = model
         super().__init_subclass__(**kwargs)
@@ -106,7 +106,7 @@ class SqlAlchemyRepository(RepositoryABC):
 
         if res is not None:
             return res.to_scheme()
-        return None
+        return
 
     async def get_all(self, filters: dict[str, Any]) -> list[Any]:
         logger.debug(
@@ -122,7 +122,7 @@ class SqlAlchemyRepository(RepositoryABC):
         self,
         filters: dict[str, Any],
         data: dict[str, Any],
-    ) -> Any:
+    ) -> Any | None:
         logger.debug(
             "Query for database from {model} with filters: {filters} and params: {params}",
             model=self._model.__tablename__,
@@ -136,9 +136,12 @@ class SqlAlchemyRepository(RepositoryABC):
             .returning(self._model)
         )
         res = await self._session.execute(stmt)
-        return res.scalar_one().to_scheme()
+        res = res.scalar_one_or_none()
+        if res is not None:
+            return res.to_scheme()
+        return
 
-    async def delete(self, filters: dict[str, Any]) -> Any:
+    async def delete(self, filters: dict[str, Any]) -> Any | None:
         logger.debug(
             "Query for database from {model} with params: {params}",
             model=self._model.__tablename__,
@@ -146,4 +149,7 @@ class SqlAlchemyRepository(RepositoryABC):
         )
         stmt = delete(self._model).filter_by(**filters).returning(self._model)
         res = await self._session.execute(stmt)
-        return res.scalar_one().to_scheme()
+        res = res.scalar_one_or_none()
+        if res is not None:
+            return res.to_scheme()
+        return

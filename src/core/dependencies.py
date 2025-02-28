@@ -4,19 +4,19 @@ from fastapi import (
     Header,
     Depends,
 )
-from faststream.rabbit.fastapi import RabbitBroker
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.sql import func
 
-from src.core.rabbit.broker import Broker
+from src.core.config import Config
+from src.core.rabbit.broker import BrokerRabbit
 
 
-def _get_broker() -> RabbitBroker:
-    return Broker().broker
+def _get_broker() -> BrokerRabbit:
+    return BrokerRabbit(Config().rmq.URL)
 
 
 TokenDep = Annotated[str, Header(alias="WWW-Authorization")]
-BrokerDep = Annotated[RabbitBroker, Depends(_get_broker)]
+BrokerDep = Annotated[BrokerRabbit, Depends(_get_broker)]
 
 int_pk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 int_not_null = Annotated[int, mapped_column(nullable=False)]

@@ -1,7 +1,8 @@
-from typing import Self
+from typing import Self, Type
 from pydantic import (
     BaseModel,
     model_validator,
+    field_serializer,
 )
 from enum import Enum
 from datetime import datetime
@@ -21,6 +22,10 @@ class FaceScheme(BaseModel):
     date_of_birth: datetime
     name: str | None = None
     inn: int
+
+    @field_serializer("type")
+    def serialize_type(self, type_field: Type[Enum], _info):
+        return type_field.value
 
     @model_validator(mode="after")
     def check_type_and_fields(self) -> Self:

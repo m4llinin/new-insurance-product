@@ -21,7 +21,7 @@ def setup_logging(mode: str, config: LoggingConfig):
             backtrace=config.BACKTRACE,
             serialize=config.SERIALIZE,
         )
-    else:
+    elif mode == "DEV":
         logger.add(
             sys.stdout,
             level="DEBUG",

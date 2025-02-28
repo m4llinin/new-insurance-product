@@ -8,7 +8,6 @@ from src.auth_service.utils.pwd_helper import PWDHelper
 
 from src.auth_service.schemes.auth import AuthSchemeRequest
 from src.auth_service.exceptions import NotAuthorizedException
-from src.core.cache.helper import CacheHelper
 from src.core.utils.base_service import BaseService
 
 
@@ -163,7 +162,6 @@ class AuthService(BaseService):
             "access_token": access_token,
         }
 
-    @CacheHelper.cache()
     async def get_current_user(self, token: str) -> EmailStr:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 
@@ -186,7 +184,6 @@ class AuthService(BaseService):
 
         return user.email
 
-    @CacheHelper.cache()
     async def check_user_is_authorized(self, token: str) -> bool:
         decoded_token = self._jwt_helper.decode_and_check_token("access", token)
 

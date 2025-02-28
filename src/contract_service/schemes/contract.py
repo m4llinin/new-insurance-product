@@ -1,13 +1,16 @@
 from datetime import datetime
 from enum import Enum
+from typing import Type
+
 from pydantic import (
     BaseModel,
     model_validator,
     field_validator,
+    field_serializer,
 )
 
 
-class ContractStatuses(Enum):
+class Statuses(Enum):
     DRAFT = "DRAFT"
     SIGNED = "SIGNED"
     TERMINATED = "TERMINATED"
@@ -34,12 +37,16 @@ class ContractScheme(ContractBaseModel):
     agent_id: int
     rate: float
     commission: float
-    status: ContractStatuses
+    status: Statuses
     policy_holder_id: int
     insured_personal_id: int
     owner_id: int
     policy_price: float
-    risk_id: list[int]
+    risk_id: list[int] | None = None
+
+    @field_serializer("status")
+    def serialize_status(self, status: Type[Statuses], _info):
+        return status.value
 
 
 class ContractAddScheme(ContractBaseModel):
@@ -47,7 +54,7 @@ class ContractAddScheme(ContractBaseModel):
     premium: float
     insurance_sum: float
     policy_price: float
-    status: ContractStatuses
+    status: Statuses
     agent_id: int
     policy_holder_id: int
     insured_personal_id: int
@@ -67,7 +74,7 @@ class ContractFiltersScheme(BaseModel):
     agent_id: int | None = None
     rate: float | None = None
     commission: float | None = None
-    status: ContractStatuses | None = None
+    status: Statuses | None = None
     policy_holder_id: int | None = None
     insured_personal_id: int | None = None
     owner_id: int | None = None

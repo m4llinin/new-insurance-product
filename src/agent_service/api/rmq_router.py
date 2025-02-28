@@ -1,21 +1,20 @@
 from typing import Any
-
-from faststream.rabbit.fastapi import RabbitRouter
 from loguru import logger
 from pydantic import EmailStr
 
+from src.agent_service.utils.uow import AgentUOW
 from src.core.config import Config
-from src.agent_service.api.dependencies import AgentUOWDep
 from src.agent_service.services.agent import AgentService
+from src.core.rabbit.listener import ListenerRabbit
 
-router = RabbitRouter(Config().rmq.URL)
+listener = ListenerRabbit(Config().rmq.URL)
 
 
-@router.subscriber("agent-get-agent")
+@listener("agent-get-agent", uow=AgentUOW)
 async def get_agent(
-    uow: AgentUOWDep,
     email: EmailStr,
     column: str,
+    uow: AgentUOW,
 ) -> Any | None:
     logger.info(
         "Handling request for 'agent-get-agent' with params: {params}",

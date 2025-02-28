@@ -94,23 +94,22 @@ class ProductService(BaseService):
 
     @CacheHelper.cache()
     async def get_rates_product_and_metafield(
-        self, product: RatesProduct
+        self,
+        product_id: int,
+        meta_fields: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        product_dict = product.model_dump()
-        meta_fields = await MetaFieldService(self._uow).get_metafield_rates(
-            product_dict.get("meta_fields")
-        )
+        meta_fields = await MetaFieldService(self._uow).get_metafield_rates(meta_fields)
 
         async with self._uow:
             product_db = await self._uow.products.get_one(
                 {
-                    "id": product.product_id,
+                    "id": product_id,
                 }
             )
         logger.debug(
             "Got product rates: {rates} with params: {params}",
             rates=product_db.basic_rate,
-            params=product.product_id,
+            params=product_id,
         )
         return {
             "product_rate": product_db.basic_rate,

@@ -12,7 +12,7 @@ from src.core.database.base import SqlAlchemyRepository
 
 
 class AgentRepository(SqlAlchemyRepository, model=Agent):
-    async def get_one_with_face(self, filters: dict[str, Any]) -> dict[str, Any]:
+    async def get_one_with_face(self, filters: dict[str, Any]) -> dict[str, Any] | None:
         logger.debug(
             "Query for database from {model} with params: {params}",
             model=self._model,

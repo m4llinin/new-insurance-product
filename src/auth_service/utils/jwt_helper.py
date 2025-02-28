@@ -3,7 +3,6 @@ from datetime import (
     UTC,
     timedelta,
 )
-
 from jwt import (
     PyJWT,
     PyJWTError,

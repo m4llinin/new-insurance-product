@@ -28,7 +28,7 @@ async def is_auth(
     if not response:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail="User is unauthorized",
         )
     return response
 
@@ -44,7 +44,7 @@ async def get_current_user(
     if not response:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail="User is unauthorized",
         )
 
     return response

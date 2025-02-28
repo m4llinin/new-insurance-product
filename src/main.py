@@ -8,34 +8,24 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import Config
-from src.core.rabbit.broker import Broker
 from src.core.database.connection import DBConnection
 from src.core.cache.helper import CacheHelper
 from src.core.log import setup_logging
-from src.product_service import (
-    router as product_router,
-    rmq_router as rmq_product_router,
-)
-from src.auth_service import (
-    router as auth_router,
-    rmq_router as rmq_auth_router,
-)
+from src.core.rabbit.broker import BrokerRabbit
+from src.core.rabbit.listener import ListenerRabbit
+
+from src.product_service import router as product_router
+from src.auth_service import router as auth_router
 from src.contract_service import router as contract_router
-from src.agent_service import (
-    router as agent_router,
-    rmq_router as rmq_agent_router,
-)
+from src.agent_service import router as agent_router
 
 
 class App:
     routers: list[APIRouter] = [
         auth_router,
-        rmq_auth_router,
         product_router,
-        rmq_product_router,
         contract_router,
         agent_router,
-        rmq_agent_router,
     ]
 
     def __init__(self, config: Config) -> None:
@@ -56,7 +46,11 @@ class App:
 
     @asynccontextmanager
     async def lifespan(self, app: FastAPI) -> AsyncGenerator[None, None]:
-        broker = Broker(
+        listener = ListenerRabbit(
+            url=self._config.rmq.URL,
+        )
+        await listener.start()
+        broker = BrokerRabbit(
             url=self._config.rmq.URL,
         )
         await broker.connect()
@@ -64,14 +58,15 @@ class App:
         DBConnection(
             url=self._config.db.URL,
         )
-        CacheHelper.initialize(
+        CacheHelper.connect(
             url=self._config.redis.URL,
         )
 
         yield
 
         await broker.disconnect()
-        await CacheHelper.close()
+        await listener.disconnect()
+        await CacheHelper.disconnect()
 
     def initialize(self) -> FastAPI:
         app = FastAPI(lifespan=self.lifespan)

@@ -1,93 +1,78 @@
 import asyncio
-from functools import wraps
+import uuid
+from typing import Any
+from aio_pika.abc import AbstractIncomingMessage
 
-from aio_pika import connect, Message
-from faststream.rabbit.broker import RabbitBroker
-
+from src.core.rabbit.base import BaseRabbit
 from src.core.utils.singleton import singleton
 
 
-# @singleton
-# class Broker:
-#     def __init__(self, url: str = None) -> None:
-#         self.url = url
-#         if self.url is None:
-#             raise ValueError("Broker url cannot be None")
-#
-#         self._broker = RabbitBroker(url=url)
-#         self.is_connected = False
-#
-#     async def connect(self) -> None:
-#         if self.is_connected:
-#             return
-#
-#         await self._broker.connect()
-#         await self._broker.start()
-#         self.is_connected = True
-#
-#     async def disconnect(self) -> None:
-#         if not self.is_connected:
-#             return
-#
-#         await self._broker.close()
-#         self.is_connected = False
-#
-#     @property
-#     def broker(self) -> RabbitBroker:
-#         if not self.is_connected:
-#             raise RuntimeError("Broker not connected")
-#         return self._broker
-
-
 @singleton
-class BrokerDecorator:
-    tasks = []
+class BrokerRabbit(BaseRabbit):
+    async def _publish(
+        self,
+        message: dict[str, Any],
+        routing_key: str,
+        correlation_id: str = None,
+        reply_to: str = None,
+    ) -> None:
+        if not self.connection or self.connection.is_closed:
+            raise RuntimeError("Rabbit is not connected")
 
-    def __init__(self, url: str):
-        self.url = url
+        if not self.channel or self.channel.is_closed:
+            raise RuntimeError("Rabbit has not channel")
 
-    def __call__(self, queue_name: str):
-        def decorator(func):
-            @wraps(func)
-            async def wrapper():
-                connection = await connect(self.url)
-                async with connection:
-                    channel = await connection.channel()
-                    await channel.set_qos(prefetch_count=1)
+        await self.exchange.publish(
+            message=self.create_message(
+                body=message,
+                correlation_id=correlation_id,
+                reply_to=reply_to,
+            ),
+            routing_key=routing_key,
+        )
 
-                    queue = await channel.declare_queue(queue_name, durable=True)
-                    print(f"Listening to queue: {queue_name}")
+    async def publish(
+        self,
+        message: dict[str, Any],
+        routing_key: str,
+        reply_to: str = None,
+    ) -> None:
+        await self._publish(
+            message=message,
+            routing_key=routing_key,
+            reply_to=reply_to,
+        )
 
-                    await queue.consume(func)
+    async def request(
+        self,
+        message: dict[str, Any],
+        routing_key: str,
+    ) -> Any:
+        correlation_id = str(uuid.uuid4())
+        future = asyncio.get_running_loop().create_future()
 
-                    async with queue.iterator() as queue_iter:
-                        async for message in queue_iter:
-                            message = await message
-                            async with message.process():
-                                token = message.body.decode()
-                                print(
-                                    f"Received token from queue '{queue_name}': {token}"
-                                )
+        async def callback(callback_message: AbstractIncomingMessage):
+            async with callback_message.process():
+                future.set_result(
+                    self.decode_body(callback_message.body),
+                )
 
-                                # Обрабатываем запрос через декорированную функцию
-                                response = await func(token)
+        if not self.channel or self.channel.is_closed:
+            raise RuntimeError("Rabbit has not channel")
 
-                                # Отправляем результат обратно в очередь ответа
-                                if message.reply_to:
-                                    await channel.default_exchange.publish(
-                                        message=Message(
-                                            body=response.encode(),
-                                        ),
-                                        routing_key=message.reply_to,
-                                    )
-                                    print(
-                                        f"Sent response to reply_to queue: {message.reply_to}"
-                                    )
+        reply_queue = await self.channel.declare_queue(
+            name=correlation_id,
+            auto_delete=True,
+        )
+        await reply_queue.bind(self.exchange, routing_key=correlation_id)
+        await reply_queue.consume(callback)
 
-            self.tasks.append(wrapper)
-            return wrapper
+        await self._publish(
+            message=message,
+            routing_key=routing_key,
+            correlation_id=correlation_id,
+            reply_to=reply_queue.name,
+        )
 
-        return decorator
-
-    async def start_consumers(self):
-        await asyncio.gather(*(task() for task in self.tasks))
+        response = await future
+        return response.get("response")

@@ -7,8 +7,10 @@ from src.core.dependencies import (
     str_not_null,
 )
 
-from src.auth_service.schemes.auth import AuthScheme
-from src.auth_service.schemes.auth import Role
+from src.auth_service.schemes.auth import (
+    AuthScheme,
+    Role,
+)
 
 
 class User(Base, scheme=AuthScheme):

@@ -1,18 +1,16 @@
-from faststream.rabbit.fastapi import RabbitRouter
 from loguru import logger
 from pydantic import EmailStr
 
+from src.auth_service.utils.uow import AuthUOW
 from src.core.config import Config
-
 from src.auth_service.services.auth import AuthService
-from src.auth_service.api.dependencies import AuthUOWDep
+from src.core.rabbit.listener import ListenerRabbit
+
+listener = ListenerRabbit(Config().rmq.URL)
 
 
-router = RabbitRouter(Config().rmq.URL)
-
-
-@router.subscriber("auth-check")
-async def check_auth(uow: AuthUOWDep, token: str) -> bool:
+@listener("auth-check", uow=AuthUOW)
+async def check_auth(token: str, uow: AuthUOW) -> bool:
     logger.info("Handling request for 'auth-check' with params: {params}", params=token)
     response = False
 
@@ -24,8 +22,8 @@ async def check_auth(uow: AuthUOWDep, token: str) -> bool:
     return response
 
 
-@router.subscriber("auth-get-user")
-async def get_user(uow: AuthUOWDep, token: str) -> EmailStr:
+@listener("auth-get-user", uow=AuthUOW)
+async def get_user(token: str, uow: AuthUOW) -> EmailStr:
     logger.info(
         "Handling request for 'auth-get-user' with params: {params}", params=token
     )

@@ -1,6 +1,10 @@
 from enum import Enum
-
-from pydantic import BaseModel, EmailStr
+from typing import Type
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    field_serializer,
+)
 
 
 class Role(Enum):
@@ -12,7 +16,12 @@ class AuthScheme(BaseModel):
     id: int
     email: EmailStr
     hashed_password: str
+    role: Role
     is_active: bool
+
+    @field_serializer("role")
+    def serialize_role(self, role: Type[Role], _info) -> str:
+        return role.value
 
 
 class AuthSchemeRequest(BaseModel):
