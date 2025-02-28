@@ -28,7 +28,10 @@ class RiskService(BaseService):
                         "id": risk_id,
                     }
                 )
-                output_rates.append(risk.rate)
+
+                if risk is not None:
+                    output_rates.append(risk.rate)
+
             logger.debug(
                 "Got risk rates: {rates} for risk_ids: {risk_ids}",
                 rates=output_rates,

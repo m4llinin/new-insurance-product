@@ -61,6 +61,10 @@ class ContractAddScheme(ContractBaseModel):
     owner_id: int
     risk_id: list[int]
 
+    @field_serializer("status")
+    def serialize_status(self, status: Type[Statuses], _info):
+        return status.value
+
 
 class ContractFiltersScheme(BaseModel):
     id: int | None = None
@@ -78,6 +82,10 @@ class ContractFiltersScheme(BaseModel):
     policy_holder_id: int | None = None
     insured_personal_id: int | None = None
     owner_id: int | None = None
+
+    @field_serializer("status")
+    def serialize_status(self, status: Type[Statuses], _info):
+        return status.value
 
     @model_validator(mode="after")
     def check_dates(self) -> "ContractFiltersScheme":
