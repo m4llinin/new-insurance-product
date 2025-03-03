@@ -24,7 +24,7 @@ class Agent(Base, scheme=AgentScheme):
     email: Mapped[str] = mapped_column(nullable=False)
     face_id: Mapped[int] = mapped_column(ForeignKey("faces.id"), nullable=False)
     ikp_id: Mapped[int] = mapped_column(ForeignKey("ikps.id"), nullable=False)
-    status: Mapped[str] = mapped_column(Enum(AgentStatuses), default=AgentStatuses.project)
+    status: Mapped[str] = mapped_column(Enum(AgentStatuses), default=AgentStatuses.project.value)
     date_create: Mapped[datetime] = mapped_column(nullable=False)
     date_begin: Mapped[datetime] = mapped_column(nullable=True)
     date_end: Mapped[datetime] = mapped_column(nullable=True)

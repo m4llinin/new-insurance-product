@@ -19,5 +19,5 @@ class User(Base, scheme=AuthScheme):
     id: Mapped[int_pk]
     email: Mapped[str_not_null]
     hashed_password: Mapped[str_not_null]
-    role: Mapped[str] = mapped_column(Enum(Role), default=Role.USER, nullable=False)
+    role: Mapped[str] = mapped_column(Enum(Role), default=Role.USER.value, nullable=False)
     is_active: Mapped[bool] = mapped_column(default=False, nullable=False)

@@ -8,7 +8,7 @@ from pydantic_settings import (
 
 class BaseConfig(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file="env/.env",
+        env_file="env/dev.env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         env_ignore_empty=True,

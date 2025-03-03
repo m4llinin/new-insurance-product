@@ -1,0 +1,90 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.dockerfile
+    container_name: app
+    command: [ "fastapi", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8000" ]
+    ports:
+      - "8000:8000"
+    env_file:
+      - env/prod.env
+    restart: on-failure
+    depends_on:
+      db1:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      broker:
+        condition: service_healthy
+
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/app.dockerfile
+    command: [ "alembic", "upgrade", "head" ]
+    env_file:
+      - env/prod.env
+    restart: no
+    depends_on:
+      db1:
+        condition: service_healthy
+
+  db1:
+    image: postgres:17-alpine
+    container_name: db1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: insurance
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d insurance" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    volumes:
+      - ./redis_data:/data
+    ports:
+      - "6378:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  broker:
+    image: rabbitmq:4.0.7-management-alpine
+    container_name: broker
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_VHOST=/
+    ports:
+      - "5671:5672"
+      - "15671:15672"
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
